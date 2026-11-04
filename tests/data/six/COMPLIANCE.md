@@ -34,9 +34,11 @@ cargo test --test test_six_compliance -- --nocapture
 
 ## Result
 
-The first evaluation found 8 issues (G1–G8 below): 60 of 72 bill vectors conformed. All eight have since been fixed:
-all 72 bill vectors and all 5 billing-information vectors now conform, and no vector carries a `known_gap` marker.
-G8 is covered by a unit test in `src/language/language.rs` instead of a vector.
+The first evaluation found 8 issues (G1–G8 below): 60 of 72 bill vectors conformed. G1–G6 and G8 have since been fixed,
+and 71 of 72 bill vectors plus all 5 billing-information vectors now conform. The remaining vector, `QRR-EUR`, is G7,
+which is deliberately deferred until IG v2.3 expires in November 2027
+([hedwig-corp/swissqrust#2](https://github.com/hedwig-corp/swissqrust/issues/2)). G8 is covered by a unit test in
+`src/language/language.rs` instead of a vector.
 
 ### What conforms
 
@@ -84,7 +86,7 @@ G8 is covered by a unit test in `src/language/language.rs` instead of a vector.
 | G4 | Medium | 6.2 | **No check of the version-25 / 997-character limit.** The message and Alternative procedure limits count characters, so text like `€` (3 bytes) produces a 903-character, 1583-byte payload, which encodes as **QR version 33**. Related: both renderers call `qr_code(bill).ok()`, so if encoding ever failed the bill would render **without a QR code** instead of returning an error (`src/render/engines/svg/render_svg_bill.rs`, `src/render/engines/pdf/render_bill.rs`). | `QR-MAX-VERSION-25` | Fixed |
 | G5 | Low | 4.2.2 line 19 | **Leading zeros accepted in the amount.** `AMOUNT_REGEX` is `^\d{1,9}\.\d{2}$`, so `0050.00` and `01.00` pass; the spec says "without leading zeroes". | `AMT-REJECT-0050.00`, `AMT-REJECT-01.00` | Fixed |
 | G6 | Low | 4.2.2 line 4 | **IBAN length not fixed at 21.** `is_valid_iban` accepts 15–34 characters, so a CH IBAN of 20 or 22 characters with valid check digits is written into the QR code. | `IBAN-LENGTH-20`, `IBAN-LENGTH-22` | Fixed |
-| G7 | Medium (v2.4 only) | 1.1, 2.10, 2.12.1, 4.3.2 | **QR-IBAN + QR reference accepted with EUR.** v2.4 restricts QR-IBAN/QRR to CHF (euroSIC is discontinued); v2.3 still allowed it. | `QRR-EUR` | Fixed |
+| G7 | Medium (v2.4 only) | 1.1, 2.10, 2.12.1, 4.3.2 | **QR-IBAN + QR reference accepted with EUR.** v2.4 restricts QR-IBAN/QRR to CHF (euroSIC is discontinued); v2.3 still allowed it. | `QRR-EUR` | Deferred to November 2027 ([#2](https://github.com/hedwig-corp/swissqrust/issues/2)) |
 | G8 | Low (v2.4) | 3.2, Annex C | **Romansh missing.** Romansh is a correspondence language with its own headings (e.g. "Part da pajament", "Quittanza"), in force since 1 January 2026. `Language` only has De/Fr/It/En. Not written as a vector, because the test could not reference a variant that doesn't exist. | — | Fixed |
 
 ### Errata in the specification
@@ -113,15 +115,19 @@ G8 is covered by a unit test in `src/language/language.rs` instead of a vector.
 - **G5:** `AMOUNT_REGEX` is now `^(0|[1-9]\d{0,8})\.\d{2}$`.
 - **G6:** `is_valid_iban` requires exactly 21 characters.
 
-- **G7:** `BillData::new` rejects QR-IBAN + QR reference for any currency other than CHF
-  (`BillError::QrReferenceRequiresChf`). This follows v2.4 outright, even though v2.3 still allowed it and stays
-  valid until November 2027. The spec link in `src/bill/qr_bill.rs` now points at v2.4.
 - **G8:**
   - `Language::Rm` prints the slip with the Annex C Romansh labels. It is available in the CLI (`--lang rm`), the
     GUI and the web app.
   - The web app's form labels and country names have no Romansh translation, so they fall back to German.
 - **Also fixed:** the French "Billing information" label was "Information de facture"; Annex C, Table 24 says
   "Informations de facture".
+
+### Deferred
+
+- **G7:** QR-IBAN + QR reference in EUR is still accepted. v2.4 forbids it, but v2.3 allows it and stays valid
+  until November 2027, so existing EUR bills keep working until then. The `QRR-EUR` vector stays marked
+  `known_gap: G7`, and [hedwig-corp/swissqrust#2](https://github.com/hedwig-corp/swissqrust/issues/2) tracks adding
+  the reject. The spec link in `src/bill/qr_bill.rs` now points at v2.4.
 
 ### Not covered
 

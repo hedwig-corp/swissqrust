@@ -50,8 +50,6 @@ pub enum BillError{
     QrIbanRequiresQrReference,
     #[error("QR reference (QRR) requires a QR-IBAN")]
     QrReferenceRequiresQrIban,
-    #[error("QR-IBAN with QR reference (QRR) can only be used for CHF")]
-    QrReferenceRequiresChf,
     #[error("Unstructured message and billing information together must not exceed 140 characters")]
     AdditionalInformationTooLong,
     #[error("Alternative procedure parameters must not exceed 100 characters")]
@@ -182,11 +180,10 @@ pub struct BillData {
             (false, true) => return Err(BillError::QrReferenceRequiresQrIban),
             _ => {}
         }
-        // Spec v2.4 2.10 / 2.12.1: QR-IBAN and QR reference are for CHF
-        // only (euroSIC is discontinued), so EUR is IBAN + SCOR or NON.
-        if has_qr_reference && currency != Currency::CHF {
-            return Err(BillError::QrReferenceRequiresChf);
-        }
+        // Spec v2.4 2.10 / 2.12.1 restricts QR-IBAN and QR reference to
+        // CHF, but v2.3 still allows EUR and stays valid until November
+        // 2027, so EUR + QRR is accepted until then.
+        // TODO: reject it once v2.3 expires - https://github.com/hedwig-corp/swissqrust/issues/2
 
         // Spec 4.1.1: character set restriction applies to all free-text fields.
         if let Some(ref msg) = unstructured_message {
@@ -380,9 +377,11 @@ mod tests {
         assert!(matches!(err, BillError::QrReferenceRequiresQrIban));
     }
 
+    /// Still allowed by IG v2.3 until November 2027, see
+    /// https://github.com/hedwig-corp/swissqrust/issues/2.
     #[test]
-    fn qr_reference_in_eur_is_rejected() {
-        let err = BillData::new(
+    fn qr_reference_in_eur_is_accepted_until_v2_3_expires() {
+        assert!(BillData::new(
             QR_IBAN.to_string(),
             address(),
             None,
@@ -393,9 +392,7 @@ mod tests {
             None,
             [None, None],
         )
-        .unwrap_err();
-
-        assert!(matches!(err, BillError::QrReferenceRequiresChf));
+        .is_ok());
     }
 
     #[test]

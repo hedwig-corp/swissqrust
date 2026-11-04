@@ -1874,7 +1874,8 @@
         "amount": "10.00",
         "reference": "210000000003139471430009017"
       },
-      "expect": "reject"
+      "expect": "reject",
+      "known_gap": "G7"
     },
     {
       "id": "QRR-CHECK-DIGIT",
