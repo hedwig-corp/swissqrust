@@ -5,7 +5,7 @@
  */
 
 use std::fmt::{Display, Formatter};
-use qrcodegen::{QrCode, QrCodeEcc};
+use qrcodegen::{QrCode, QrCodeEcc, QrSegment, Version as QrVersion};
 use thiserror::Error;
 use crate::{Address, BillData, ReferenceType};
 
@@ -15,7 +15,7 @@ pub enum QRBillError {
     QrEncodingFailed,
 }
 
-/// According to the [spec](https://www.six-group.com/dam/download/banking-services/standardization/qr-bill/ig-qr-bill-v2.3-de.pdf)
+/// According to the [spec](https://www.six-group.com/dam/download/banking-services/standardization/qr-bill/ig-qr-bill-v2.4-de.pdf)
 /// section 4.1.4, there are two allowed line separators.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub enum LineSeparator{
@@ -213,9 +213,27 @@ impl QRTextBuilder {
     }
 }
 
+/// Spec 6.2: maximum Swiss QR Code data content, separators included. The
+/// payload always contains CR/LF, so it is encoded in byte mode, where
+/// version 25 at level M holds exactly this many UTF-8 bytes.
+pub const MAX_QR_DATA_BYTES: usize = 997;
+/// Spec 6.2: largest QR code version a Swiss QR Code may use.
+pub const MAX_QR_VERSION: u8 = 25;
+
+/// Encodes the payload per spec 6.1/6.2: error correction level M (never
+/// raised, which `QrCode::encode_text` would do when it fits), smallest
+/// version, at most version 25.
 pub fn encode_text_to_qr_code(qr_text: &str) -> Result<QrCode, QRBillError> {
-    QrCode::encode_text(qr_text, QrCodeEcc::Medium)
-        .map_err(|_| QRBillError::QrEncodingFailed)
+    let segments = QrSegment::make_segments(qr_text);
+    QrCode::encode_segments_advanced(
+        &segments,
+        QrCodeEcc::Medium,
+        QrVersion::MIN,
+        QrVersion::new(MAX_QR_VERSION),
+        None,
+        false,
+    )
+    .map_err(|_| QRBillError::QrEncodingFailed)
 }
 
 pub fn qr_code(bill: &BillData) -> Result<QrCode, QRBillError> {

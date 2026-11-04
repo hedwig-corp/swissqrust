@@ -37,10 +37,10 @@ pub fn render_bill_to_svg(bill: &BillData, language: Language) -> Result<String,
     PaymentPartLayout::new()
         .render(bill, language, &fonts, &mut ops);
 
-    let svg = execute_bill_ops_svg(
-        ops,
-        qr_code(bill).ok().as_ref(),
-    )?;
+    // A slip without its QR code is not a QR-bill, so fail instead of
+    // silently drawing the rest of it.
+    let qr = qr_code(bill).map_err(|_| RenderError::QrCodeGenerationError)?;
+    let svg = execute_bill_ops_svg(ops, Some(&qr))?;
 
     Ok(svg)
 

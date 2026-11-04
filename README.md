@@ -34,7 +34,7 @@ sidetracking the actual showcase. But it was fun to learn (iced)[https://docs.rs
 however, you do not need to run packager. To see how this works, run
 
 ```
-cargo run -p swiss-qrust-cli -- --input crates/cli/data/robert_schneider.json --output crates/cli/output/bill.pdf --lang fr # or de or it or en, default is en
+cargo run -p swiss-qrust-cli -- --input crates/cli/data/robert_schneider.json --output crates/cli/output/bill.pdf --lang fr # or de, it, rm or en, default is en
 ```
 
 And for the GUI version:

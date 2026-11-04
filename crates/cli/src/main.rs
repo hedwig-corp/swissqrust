@@ -22,7 +22,7 @@ struct Cli {
     #[arg(short, long)]
     output: String,
 
-    /// Language for PDF (e.g., "de", "fr", "it")
+    /// Language for PDF (e.g., "de", "fr", "it", "rm")
     #[arg(short, long, default_value = "de")]
     lang: Option<String>,
 }
@@ -43,6 +43,7 @@ fn main() -> Result<()> {
         Some("de") => swiss_qrust::Language::De,
         Some("fr") => swiss_qrust::Language::Fr,
         Some("it") => swiss_qrust::Language::It,
+        Some("rm") => swiss_qrust::Language::Rm,
         _ => swiss_qrust::Language::En,
     };
 
