@@ -246,7 +246,10 @@ reject("QRIBAN-WITHOUT-QRR", "4.2.2 line 28 / 7.1", "QR-IBAN requires reference 
 reject("QRIBAN-WITH-SCOR", "4.3.2", "A QR-IBAN cannot be used with SCOR", bill(QR_IBAN, CDTR, reference="RF18539007547034"))
 reject("IBAN-WITH-QRR", "4.3.2", "A QR reference requires a QR-IBAN", bill(BASE_IBAN, CDTR, reference="210000000003139471430009017"))
 reject("QRR-EUR", "2.10 / 2.12.1 / 4.3.2", "QR-IBAN and QR reference are for CHF only since v2.4",
-       bill(QR_IBAN, CDTR, currency="EUR", amount="10.00", reference="210000000003139471430009017"))
+       bill(QR_IBAN, CDTR, currency="EUR", amount="10.00", reference="210000000003139471430009017"),
+       # Deferred until IG v2.3 expires in November 2027:
+       # https://github.com/hedwig-corp/swissqrust/issues/2
+       known_gap="G7")
 
 assert qrr_with_check("21000000000313947143000901") == "210000000003139471430009017"
 reject("QRR-CHECK-DIGIT", "Annex B", "QR reference with wrong mod-10 check digit",
