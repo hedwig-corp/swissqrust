@@ -14,7 +14,7 @@ use qrcodegen::QrCodeEcc;
 use serde::Deserialize;
 use swiss_qrust::qr_bill::{qr_code, QrBill};
 use swiss_qrust::support::utils::is_in_extended_sps_charset;
-use swiss_qrust::{BillData, InputBill, InputSwicoBillInformation, SwicoBillInformation};
+use swiss_qrust::{parse_qr_text, BillData, InputBill, InputSwicoBillInformation, SwicoBillInformation};
 
 const VECTORS: &str = include_str!("data/six/ig_qr_bill_v2_4_vectors.json");
 
@@ -207,4 +207,39 @@ fn six_billing_information_vectors() {
         let decoded = SwicoBillInformation::decode_text(&v.text).unwrap_or_else(|| panic!("{}: decode", v.id));
         assert_eq!(decoded, info, "{}: decode", v.id);
     }
+}
+
+/// The reverse direction: every payload the spec shows (and every one the
+/// library generates for an accepted vector) parses back into the same
+/// bill. Rejected vectors are input-side rules, so they have no payload.
+#[test]
+fn six_payloads_parse_back() {
+    let failures: Vec<String> = vector_file()
+        .vectors
+        .iter()
+        .filter(|v| v.known_gap.is_none())
+        .filter_map(|v| {
+            let Ok((bill, text)) = build(&v.input) else { return None };
+            let mut payloads = vec![("generated", text)];
+            if let Expect::QrLines(lines) | Expect::QrLinesOrReject(lines) = &v.expect {
+                let mut lines = lines.clone();
+                // Annex A pads with empty status-A lines; a real payload omits them (4.1.4).
+                while lines.len() > TRAILER_LINE && lines.last().is_some_and(|l| l.is_empty()) {
+                    lines.pop();
+                }
+                payloads.push(("spec", lines.join("\r\n")));
+            }
+            let errors: Vec<String> = payloads
+                .into_iter()
+                .filter_map(|(which, text)| match parse_qr_text(&text) {
+                    Ok(parsed) if parsed == bill => None,
+                    Ok(parsed) => Some(format!("{which} payload parsed to a different bill: {parsed:?}")),
+                    Err(e) => Some(format!("{which} payload rejected: {e}")),
+                })
+                .collect();
+            (!errors.is_empty()).then(|| format!("{} ({}): {}", v.id, v.spec, errors.join("; ")))
+        })
+        .collect();
+
+    assert!(failures.is_empty(), "{} vector(s) failed:\n{}", failures.len(), failures.join("\n"));
 }
