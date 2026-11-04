@@ -1,0 +1,2477 @@
+{
+  "source": "SIX Interbank Clearing, Swiss Implementation Guidelines for the QR-bill, Version 2.4 (24.02.2026, valid from 14 November 2026): https://www.six-group.com/dam/download/banking-services/standardization/qr-bill/ig-qr-bill-v2.4-en.pdf",
+  "notes": [
+    "Expected payloads come from Table 8 and the Annex A examples (German original values, without the English translation glosses), not from this library.",
+    "Lines are compared after dropping trailing empty status-A lines (StrdBkgInf, AltPmt): 4.1.4 says they are omitted when unused, while the Annex A tables show them as empty lines. Both forms are accepted.",
+    "known_gap names a finding in tests/data/six/COMPLIANCE.md. Such vectors are expected to fail today; the runner fails once one passes, so the marker gets removed together with the fix."
+  ],
+  "vectors": [
+    {
+      "id": "ANNEX-A-1",
+      "spec": "IG QR-bill v2.4, Annex A, Table 17",
+      "description": "QR-IBAN + QR reference, amount and debtor",
+      "input": {
+        "iban": "CH6431961000004421557",
+        "creditor_address": {
+          "name": "Max Muster & Söhne",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "123"
+        },
+        "currency": "CHF",
+        "amount": "50.00",
+        "debtor_address": {
+          "name": "Simon Muster",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "1"
+        },
+        "reference": "000008207791225857421286694",
+        "unstructured_message": "Bezahlung der Reise"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH6431961000004421557",
+          "S",
+          "Max Muster & Söhne",
+          "Musterstrasse",
+          "123",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "50.00",
+          "CHF",
+          "S",
+          "Simon Muster",
+          "Musterstrasse",
+          "1",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "QRR",
+          "000008207791225857421286694",
+          "Bezahlung der Reise",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "ANNEX-A-2",
+      "spec": "IG QR-bill v2.4, Annex A, Table 18",
+      "description": "QR-IBAN + QRR with billing information and one alternative procedure",
+      "input": {
+        "iban": "CH4431999123000889012",
+        "creditor_address": {
+          "name": "Max Muster & Söhne",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "123"
+        },
+        "currency": "CHF",
+        "amount": "1949.75",
+        "debtor_address": {
+          "name": "Simon Muster",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "1"
+        },
+        "reference": "210000000003139471430009017",
+        "unstructured_message": "Auftrag vom 15.10.2020",
+        "bill_information": "//S1/10/1234/11/201021/30/102673386/32/7.7/40/0:30",
+        "alternative_schemes": [
+          "eBill/B/simon.muster@example.com",
+          null
+        ]
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH4431999123000889012",
+          "S",
+          "Max Muster & Söhne",
+          "Musterstrasse",
+          "123",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "1949.75",
+          "CHF",
+          "S",
+          "Simon Muster",
+          "Musterstrasse",
+          "1",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "QRR",
+          "210000000003139471430009017",
+          "Auftrag vom 15.10.2020",
+          "EPD",
+          "//S1/10/1234/11/201021/30/102673386/32/7.7/40/0:30",
+          "eBill/B/simon.muster@example.com"
+        ]
+      }
+    },
+    {
+      "id": "ANNEX-A-2-SWICO",
+      "spec": "IG QR-bill v2.4, Annex A, Table 18 + Annex D",
+      "description": "Same as ANNEX-A-2, billing information supplied as structured S1 fields",
+      "input": {
+        "iban": "CH4431999123000889012",
+        "creditor_address": {
+          "name": "Max Muster & Söhne",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "123"
+        },
+        "currency": "CHF",
+        "amount": "1949.75",
+        "debtor_address": {
+          "name": "Simon Muster",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "1"
+        },
+        "reference": "210000000003139471430009017",
+        "unstructured_message": "Auftrag vom 15.10.2020",
+        "alternative_schemes": [
+          "eBill/B/simon.muster@example.com",
+          null
+        ],
+        "swico_bill_information": {
+          "invoice_number": "1234",
+          "invoice_date": "2020-10-21",
+          "vat_number": "102673386",
+          "vat_rate": 7.7,
+          "payment_conditions": [
+            {
+              "discount": 0,
+              "days": 30
+            }
+          ]
+        }
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH4431999123000889012",
+          "S",
+          "Max Muster & Söhne",
+          "Musterstrasse",
+          "123",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "1949.75",
+          "CHF",
+          "S",
+          "Simon Muster",
+          "Musterstrasse",
+          "1",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "QRR",
+          "210000000003139471430009017",
+          "Auftrag vom 15.10.2020",
+          "EPD",
+          "//S1/10/1234/11/201021/30/102673386/32/7.7/40/0:30",
+          "eBill/B/simon.muster@example.com"
+        ]
+      }
+    },
+    {
+      "id": "ANNEX-A-3",
+      "spec": "IG QR-bill v2.4, Annex A, Table 19",
+      "description": "IBAN without amount, debtor or reference (donation)",
+      "input": {
+        "iban": "CH5204835012345671000",
+        "creditor_address": {
+          "name": "Muster Stiftung",
+          "plz": "3001",
+          "city": "Bern",
+          "country": "CH",
+          "street": "Postfach"
+        },
+        "currency": "CHF"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5204835012345671000",
+          "S",
+          "Muster Stiftung",
+          "Postfach",
+          "",
+          "3001",
+          "Bern",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "CHF",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "NON",
+          "",
+          "",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "ANNEX-A-4",
+      "spec": "IG QR-bill v2.4, Annex A, Table 20 (check digits corrected)",
+      "description": "IBAN + Creditor Reference (SCOR)",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "211.00",
+        "debtor_address": {
+          "name": "Sarah Beispiel",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "1"
+        },
+        "reference": "RF240191230100405JSH0438"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster Krankenkasse",
+          "Musterstrasse",
+          "12",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "211.00",
+          "CHF",
+          "S",
+          "Sarah Beispiel",
+          "Musterstrasse",
+          "1",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "SCOR",
+          "RF240191230100405JSH0438",
+          "",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "ANNEX-A-4-AS-PRINTED",
+      "spec": "IG QR-bill v2.4, Annex A, Table 20 / 2.12.2",
+      "description": "The reference exactly as printed in Table 20 has invalid check digits and must be rejected",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "211.00",
+        "debtor_address": {
+          "name": "Sarah Beispiel",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "1"
+        },
+        "reference": "RF720191230100405JSH0438"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "ANNEX-A-5",
+      "spec": "IG QR-bill v2.4, Annex A, Table 21",
+      "description": "Creditor in Liechtenstein",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Max Muster & Söhne",
+          "plz": "9490",
+          "city": "Vaduz",
+          "country": "LI",
+          "street": "Musterstrasse",
+          "house_num": "123"
+        },
+        "currency": "CHF",
+        "amount": "199.95",
+        "debtor_address": {
+          "name": "Sarah Beispiel",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "1"
+        },
+        "reference": "RF18539007547034"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Max Muster & Söhne",
+          "Musterstrasse",
+          "123",
+          "9490",
+          "Vaduz",
+          "LI",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "199.95",
+          "CHF",
+          "S",
+          "Sarah Beispiel",
+          "Musterstrasse",
+          "1",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "SCOR",
+          "RF18539007547034",
+          "",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "ANNEX-A-6",
+      "spec": "IG QR-bill v2.4, Annex A, Table 22",
+      "description": "Debtor outside Switzerland",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Max Muster & Söhne",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "123"
+        },
+        "currency": "CHF",
+        "amount": "199.95",
+        "debtor_address": {
+          "name": "Sarah Beispiel",
+          "plz": "78462",
+          "city": "Konstanz",
+          "country": "DE",
+          "street": "Musterstrasse",
+          "house_num": "1"
+        },
+        "reference": "RF18539007547034"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Max Muster & Söhne",
+          "Musterstrasse",
+          "123",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "199.95",
+          "CHF",
+          "S",
+          "Sarah Beispiel",
+          "Musterstrasse",
+          "1",
+          "78462",
+          "Konstanz",
+          "DE",
+          "SCOR",
+          "RF18539007547034",
+          "",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "NOTIFY-DE",
+      "spec": "IG QR-bill v2.4, 4.4, Table 10",
+      "description": "Notification bill: amount must be 0.00 with the fixed 'do not use for payment' text",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "0.00",
+        "debtor_address": {
+          "name": "Sarah Beispiel",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "1"
+        },
+        "unstructured_message": "NICHT ZUR ZAHLUNG VERWENDEN"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster Krankenkasse",
+          "Musterstrasse",
+          "12",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0.00",
+          "CHF",
+          "S",
+          "Sarah Beispiel",
+          "Musterstrasse",
+          "1",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "NON",
+          "",
+          "NICHT ZUR ZAHLUNG VERWENDEN",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "NOTIFY-EN",
+      "spec": "IG QR-bill v2.4, 4.4, Table 10",
+      "description": "Notification bill: amount must be 0.00 with the fixed 'do not use for payment' text",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "0.00",
+        "debtor_address": {
+          "name": "Sarah Beispiel",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "1"
+        },
+        "unstructured_message": "DO NOT USE FOR PAYMENT"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster Krankenkasse",
+          "Musterstrasse",
+          "12",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0.00",
+          "CHF",
+          "S",
+          "Sarah Beispiel",
+          "Musterstrasse",
+          "1",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "NON",
+          "",
+          "DO NOT USE FOR PAYMENT",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "NOTIFY-RM",
+      "spec": "IG QR-bill v2.4, 4.4, Table 10",
+      "description": "Notification bill: amount must be 0.00 with the fixed 'do not use for payment' text",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "0.00",
+        "debtor_address": {
+          "name": "Sarah Beispiel",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "1"
+        },
+        "unstructured_message": "BETG DUVRAR PER IL PAJAMENT"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster Krankenkasse",
+          "Musterstrasse",
+          "12",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0.00",
+          "CHF",
+          "S",
+          "Sarah Beispiel",
+          "Musterstrasse",
+          "1",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "NON",
+          "",
+          "BETG DUVRAR PER IL PAJAMENT",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "IBAN-SPACES-STRIPPED",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 4",
+      "description": "IBAN given with spaces is written without spaces",
+      "input": {
+        "iban": "CH58 0079 1123 0008 8901 2",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "10.00"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster Krankenkasse",
+          "Musterstrasse",
+          "12",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "10.00",
+          "CHF",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "NON",
+          "",
+          "",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "AMT-OK-0.01",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 19",
+      "description": "Accepts minimum amount",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "0.01"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster Krankenkasse",
+          "Musterstrasse",
+          "12",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0.01",
+          "CHF",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "NON",
+          "",
+          "",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "AMT-OK-999999999.99",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 19",
+      "description": "Accepts maximum amount",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "999999999.99"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster Krankenkasse",
+          "Musterstrasse",
+          "12",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "999999999.99",
+          "CHF",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "NON",
+          "",
+          "",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "AMT-OK-0.10",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 19",
+      "description": "Accepts amount below 1.00",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "0.10"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster Krankenkasse",
+          "Musterstrasse",
+          "12",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0.10",
+          "CHF",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "NON",
+          "",
+          "",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "EUR-IBAN-SCOR",
+      "spec": "IG QR-bill v2.4, 1.1 / 4.3.2",
+      "description": "EUR with IBAN + SCOR is permitted",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "EUR",
+        "amount": "10.00",
+        "reference": "RF18539007547034"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster Krankenkasse",
+          "Musterstrasse",
+          "12",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "10.00",
+          "EUR",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "SCOR",
+          "RF18539007547034",
+          "",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "EUR-IBAN-NON",
+      "spec": "IG QR-bill v2.4, 1.1 / 4.3.3",
+      "description": "EUR with IBAN + unstructured message is permitted",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "EUR",
+        "amount": "10.00",
+        "unstructured_message": "Rechnung 42"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster Krankenkasse",
+          "Musterstrasse",
+          "12",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "10.00",
+          "EUR",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "NON",
+          "",
+          "Rechnung 42",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "ADDR-NO-STREET",
+      "spec": "IG QR-bill v2.4, 4.2.2 lines 7-8",
+      "description": "Street and building number are optional",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster AG",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH"
+        },
+        "currency": "CHF"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster AG",
+          "",
+          "",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "CHF",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "NON",
+          "",
+          "",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "ADDR-HOUSE-IN-STREET",
+      "spec": "IG QR-bill v2.4, 4.3.1 footnote 2",
+      "description": "Building number inside the street line is tolerated",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster AG",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse 12"
+        },
+        "currency": "CHF"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster AG",
+          "Musterstrasse 12",
+          "",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "CHF",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "NON",
+          "",
+          "",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "ADDR-NAME-70-CHARS-UMLAUT",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 6",
+      "description": "Name of exactly 70 characters (more than 70 UTF-8 bytes)",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Genossenschaft für Lärmschutz, Grünflächen und Gewässer, Küsnacht ZHää",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Genossenschaft für Lärmschutz, Grünflächen und Gewässer, Küsnacht ZHää",
+          "Musterstrasse",
+          "12",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "CHF",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "NON",
+          "",
+          "",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "ADDR-TOWN-35-CHARS-ACCENT",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 10",
+      "description": "Town of exactly 35 characters (more than 35 UTF-8 bytes)",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster AG",
+          "plz": "1806",
+          "city": "Saint-Légier-La Chiésaz, Vevey (VD)",
+          "country": "CH",
+          "street": "Rue du Lac",
+          "house_num": "1"
+        },
+        "currency": "CHF"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster AG",
+          "Rue du Lac",
+          "1",
+          "1806",
+          "Saint-Légier-La Chiésaz, Vevey (VD)",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "CHF",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "NON",
+          "",
+          "",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "USTRD-140-CHARS-MULTIBYTE",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 30 / 4.1.1",
+      "description": "Unstructured message of 140 multi-byte characters",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "unstructured_message": "€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster Krankenkasse",
+          "Musterstrasse",
+          "12",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "CHF",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "NON",
+          "",
+          "€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "ADDINF-140-COMBINED",
+      "spec": "IG QR-bill v2.4, 4.3.3",
+      "description": "Ustrd + StrdBkgInf together exactly 140 characters",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "unstructured_message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bill_information": "//S1/10/11111111111111111111111111111111"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster Krankenkasse",
+          "Musterstrasse",
+          "12",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "CHF",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "NON",
+          "",
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "EPD",
+          "//S1/10/11111111111111111111111111111111"
+        ]
+      }
+    },
+    {
+      "id": "ALTPMT-2x100",
+      "spec": "IG QR-bill v2.4, 4.2.2 lines 33-34",
+      "description": "Two alternative procedures of 100 characters each",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "alternative_schemes": [
+          "eBill/B/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "Twint/yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+        ]
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster Krankenkasse",
+          "Musterstrasse",
+          "12",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "CHF",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "NON",
+          "",
+          "",
+          "EPD",
+          "",
+          "eBill/B/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "Twint/yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+        ]
+      }
+    },
+    {
+      "id": "CHARSET-EXTENDED",
+      "spec": "IG QR-bill v2.4, 4.1.1",
+      "description": "Characters from Latin-1 Supplement, Latin Extended-A, Ș ș Ț ț and €",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "unstructured_message": "Șipot Țara € «ß» ÿ Ł ő"
+      },
+      "expect": {
+        "qr_lines": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster Krankenkasse",
+          "Musterstrasse",
+          "12",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "CHF",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "NON",
+          "",
+          "Șipot Țara € «ß» ÿ Ł ő",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "SCOR-SPACES",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 29 / 2.12.2",
+      "description": "Creditor Reference typed with spaces must be written without spaces (or rejected)",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "reference": "RF18 5390 0754 7034"
+      },
+      "expect": {
+        "qr_lines_or_reject": [
+          "SPC",
+          "0200",
+          "1",
+          "CH5800791123000889012",
+          "S",
+          "Muster Krankenkasse",
+          "Musterstrasse",
+          "12",
+          "8000",
+          "Seldwyla",
+          "CH",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "CHF",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "SCOR",
+          "RF18539007547034",
+          "",
+          "EPD"
+        ]
+      }
+    },
+    {
+      "id": "QR-MAX-VERSION-25",
+      "spec": "IG QR-bill v2.4, 6.2",
+      "description": "Every accepted bill must encode within QR version 25 at ECC level M (else be rejected)",
+      "input": {
+        "iban": "CH6431961000004421557",
+        "creditor_address": {
+          "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "plz": "1111111111111111",
+          "city": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "country": "CH",
+          "street": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "house_num": "aaaaaaaaaaaaaaaa"
+        },
+        "currency": "CHF",
+        "amount": "999999999.99",
+        "debtor_address": {
+          "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "plz": "1111111111111111",
+          "city": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "country": "CH",
+          "street": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "house_num": "aaaaaaaaaaaaaaaa"
+        },
+        "reference": "000008207791225857421286694",
+        "unstructured_message": "€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€",
+        "alternative_schemes": [
+          "€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€",
+          "€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€"
+        ]
+      },
+      "expect": "accept_or_reject"
+    },
+    {
+      "id": "AMT-REJECT-0050.00",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 19",
+      "description": "Amount with leading zeroes",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "0050.00"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "AMT-REJECT-01.00",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 19",
+      "description": "Amount with leading zero",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "01.00"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "AMT-REJECT-0.00",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 19",
+      "description": "Amount: zero amount without notification text",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "0.00"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "AMT-REJECT-1000000000.00",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 19",
+      "description": "Amount: amount above maximum",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "1000000000.00"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "AMT-REJECT-50,00",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 19",
+      "description": "Amount: comma decimal separator",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "50,00"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "AMT-REJECT-50",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 19",
+      "description": "Amount: no decimal places",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "50"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "AMT-REJECT-50.0",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 19",
+      "description": "Amount: one decimal place",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "50.0"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "AMT-REJECT-50.000",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 19",
+      "description": "Amount: three decimal places",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "50.000"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "AMT-REJECT--1.00",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 19",
+      "description": "Amount: negative amount",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "-1.00"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "AMT-REJECT-1 590.00",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 19",
+      "description": "Amount: thousands separator",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "amount": "1 590.00"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "CCY-USD",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 20",
+      "description": "Only CHF and EUR",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "USD"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "CCY-LOWERCASE",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 20",
+      "description": "Currency code is case-sensitive ISO 4217",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "chf"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "IBAN-DE",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 4",
+      "description": "Only CH/LI IBANs",
+      "input": {
+        "iban": "DE89370400440532013000",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "IBAN-CHECKSUM",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 4",
+      "description": "IBAN with wrong check digits",
+      "input": {
+        "iban": "CH5900791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "IBAN-LENGTH-22",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 4",
+      "description": "CH IBAN with a valid checksum but 22 characters (fixed length 21)",
+      "input": {
+        "iban": "CH78007911230008890123",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "IBAN-LENGTH-20",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 4",
+      "description": "CH IBAN with a valid checksum but 20 characters (fixed length 21)",
+      "input": {
+        "iban": "CH630079112300088901",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "QRIBAN-WITHOUT-QRR",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 28 / 7.1",
+      "description": "QR-IBAN requires reference type QRR",
+      "input": {
+        "iban": "CH4431999123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "QRIBAN-WITH-SCOR",
+      "spec": "IG QR-bill v2.4, 4.3.2",
+      "description": "A QR-IBAN cannot be used with SCOR",
+      "input": {
+        "iban": "CH4431999123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "reference": "RF18539007547034"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "IBAN-WITH-QRR",
+      "spec": "IG QR-bill v2.4, 4.3.2",
+      "description": "A QR reference requires a QR-IBAN",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "reference": "210000000003139471430009017"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "QRR-EUR",
+      "spec": "IG QR-bill v2.4, 2.10 / 2.12.1 / 4.3.2",
+      "description": "QR-IBAN and QR reference are for CHF only since v2.4",
+      "input": {
+        "iban": "CH4431999123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "EUR",
+        "amount": "10.00",
+        "reference": "210000000003139471430009017"
+      },
+      "expect": "reject",
+      "known_gap": "G7"
+    },
+    {
+      "id": "QRR-CHECK-DIGIT",
+      "spec": "IG QR-bill v2.4, Annex B",
+      "description": "QR reference with wrong mod-10 check digit",
+      "input": {
+        "iban": "CH4431999123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "reference": "210000000003139471430009018"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "QRR-ALL-ZEROS",
+      "spec": "IG QR-bill v2.4, 2.12.1",
+      "description": "QR reference must not consist exclusively of zeros",
+      "input": {
+        "iban": "CH4431999123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "reference": "000000000000000000000000000"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "QRR-26-DIGITS",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 29",
+      "description": "QR reference is always 27 characters",
+      "input": {
+        "iban": "CH4431999123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "reference": "21000000000313947143000901"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "SCOR-CHECK-DIGIT",
+      "spec": "IG QR-bill v2.4, 2.12.2",
+      "description": "Creditor Reference with wrong mod 97-10 check digits",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "reference": "RF19539007547034"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "SCOR-26-CHARS",
+      "spec": "IG QR-bill v2.4, 2.12.2",
+      "description": "Creditor Reference longer than 25 characters",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "reference": "RF04GHJ74CV9B4DFH99RXPLMMQ4"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "SCOR-NON-ALNUM",
+      "spec": "IG QR-bill v2.4, 4.1.2",
+      "description": "Creditor Reference is alphanumeric only",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "reference": "RF18-5390-0754-7034"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "USTRD-141",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 30",
+      "description": "Unstructured message above 140 characters",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "unstructured_message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "ADDINF-141-COMBINED",
+      "spec": "IG QR-bill v2.4, 4.3.3",
+      "description": "Ustrd + StrdBkgInf above 140 characters",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "unstructured_message": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bill_information": "//S1/10/111111111111111111111111111111111"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "ALTPMT-101",
+      "spec": "IG QR-bill v2.4, 4.2.2 lines 33-34",
+      "description": "Alternative procedure above 100 characters",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "alternative_schemes": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          null
+        ]
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "ALTPMT-3",
+      "spec": "IG QR-bill v2.4, 4.2.2 lines 33-34",
+      "description": "At most two alternative procedures",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "alternative_schemes": [
+          "eBill/B/a@b.ch",
+          "x/1",
+          "y/2"
+        ]
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "CHARSET-EMOJI",
+      "spec": "IG QR-bill v2.4, 4.1.1",
+      "description": "Character outside the permitted set",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "unstructured_message": "Danke 🙂"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "CHARSET-LF-IN-LINE",
+      "spec": "IG QR-bill v2.4, 4.1.1 / 4.1.4",
+      "description": "A line break inside a value would shift every following line",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "unstructured_message": "Zeile 1\nZeile 2"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "CHARSET-CR-IN-NAME",
+      "spec": "IG QR-bill v2.4, 4.1.1 / 4.1.4",
+      "description": "Carriage return inside the name",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster\rAG",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH"
+        },
+        "currency": "CHF"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "CHARSET-TAB",
+      "spec": "IG QR-bill v2.4, 4.1.1",
+      "description": "Control characters are not permitted",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "unstructured_message": "a\tb"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "CDTR-NAME-71",
+      "spec": "IG QR-bill v2.4, 4.2.2 lines 5-11 / 4.3.1",
+      "description": "Creditor address: name-71",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH"
+        },
+        "currency": "CHF"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "CDTR-NAME-EMPTY",
+      "spec": "IG QR-bill v2.4, 4.2.2 lines 5-11 / 4.3.1",
+      "description": "Creditor address: name-empty",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH"
+        },
+        "currency": "CHF"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "CDTR-STREET-71",
+      "spec": "IG QR-bill v2.4, 4.2.2 lines 5-11 / 4.3.1",
+      "description": "Creditor address: street-71",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster AG",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "currency": "CHF"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "CDTR-HOUSE-17",
+      "spec": "IG QR-bill v2.4, 4.2.2 lines 5-11 / 4.3.1",
+      "description": "Creditor address: house-17",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster AG",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "11111111111111111"
+        },
+        "currency": "CHF"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "CDTR-PLZ-17",
+      "spec": "IG QR-bill v2.4, 4.2.2 lines 5-11 / 4.3.1",
+      "description": "Creditor address: plz-17",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster AG",
+          "plz": "11111111111111111",
+          "city": "Seldwyla",
+          "country": "CH"
+        },
+        "currency": "CHF"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "CDTR-PLZ-EMPTY",
+      "spec": "IG QR-bill v2.4, 4.2.2 lines 5-11 / 4.3.1",
+      "description": "Creditor address: plz-empty",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster AG",
+          "plz": "",
+          "city": "Seldwyla",
+          "country": "CH"
+        },
+        "currency": "CHF"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "CDTR-TOWN-36",
+      "spec": "IG QR-bill v2.4, 4.2.2 lines 5-11 / 4.3.1",
+      "description": "Creditor address: town-36",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster AG",
+          "plz": "8000",
+          "city": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "country": "CH"
+        },
+        "currency": "CHF"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "CDTR-TOWN-EMPTY",
+      "spec": "IG QR-bill v2.4, 4.2.2 lines 5-11 / 4.3.1",
+      "description": "Creditor address: town-empty",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster AG",
+          "plz": "8000",
+          "city": "",
+          "country": "CH"
+        },
+        "currency": "CHF"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "CDTR-COUNTRY-UNKNOWN",
+      "spec": "IG QR-bill v2.4, 4.2.2 lines 5-11 / 4.3.1",
+      "description": "Creditor address: country-unknown",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster AG",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "XX"
+        },
+        "currency": "CHF"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "CDTR-COUNTRY-ALPHA3",
+      "spec": "IG QR-bill v2.4, 4.2.2 lines 5-11 / 4.3.1",
+      "description": "Creditor address: country-alpha3",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster AG",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CHE"
+        },
+        "currency": "CHF"
+      },
+      "expect": "reject"
+    },
+    {
+      "id": "DBTR-TOWN-EMPTY",
+      "spec": "IG QR-bill v2.4, 4.2.2 line 26",
+      "description": "Debtor town is dependent (mandatory when the debtor group is used)",
+      "input": {
+        "iban": "CH5800791123000889012",
+        "creditor_address": {
+          "name": "Muster Krankenkasse",
+          "plz": "8000",
+          "city": "Seldwyla",
+          "country": "CH",
+          "street": "Musterstrasse",
+          "house_num": "12"
+        },
+        "currency": "CHF",
+        "debtor_address": {
+          "name": "Sarah Beispiel",
+          "plz": "8000",
+          "city": "",
+          "country": "CH"
+        }
+      },
+      "expect": "reject"
+    }
+  ],
+  "billing_information": [
+    {
+      "id": "ANNEX-D-EX1",
+      "spec": "IG QR-bill v2.4, Annex D",
+      "swico_input": {
+        "invoice_number": "10201409",
+        "invoice_date": "2019-05-12",
+        "customer_reference": "1400.000-53",
+        "vat_number": "106017086",
+        "vat_date": "2018-05-08",
+        "vat_rate": 7.7,
+        "payment_conditions": [
+          {
+            "discount": 2,
+            "days": 10
+          },
+          {
+            "discount": 0,
+            "days": 30
+          }
+        ]
+      },
+      "text": "//S1/10/10201409/11/190512/20/1400.000-53/30/106017086/31/180508/32/7.7/40/2:10;0:30"
+    },
+    {
+      "id": "ANNEX-D-EX2",
+      "spec": "IG QR-bill v2.4, Annex D",
+      "swico_input": {
+        "invoice_number": "10104",
+        "invoice_date": "2018-02-28",
+        "vat_number": "395856455",
+        "vat_start_date": "2018-02-26",
+        "vat_end_date": "2018-02-27",
+        "vat_rate_details": [
+          {
+            "rate": 3.7,
+            "amount": 400.19
+          },
+          {
+            "rate": 7.7,
+            "amount": 553.39
+          },
+          {
+            "rate": 0,
+            "amount": 14
+          }
+        ],
+        "payment_conditions": [
+          {
+            "discount": 0,
+            "days": 30
+          }
+        ]
+      },
+      "text": "//S1/10/10104/11/180228/30/395856455/31/180226180227/32/3.7:400.19;7.7:553.39;0:14/40/0:30"
+    },
+    {
+      "id": "ANNEX-D-EX3",
+      "spec": "IG QR-bill v2.4, Annex D",
+      "swico_input": {
+        "invoice_number": "4031202511",
+        "invoice_date": "2018-01-07",
+        "customer_reference": "61257233.4",
+        "vat_number": "105493567",
+        "vat_rate_details": [
+          {
+            "rate": 8,
+            "amount": 49.82
+          }
+        ],
+        "vat_import_taxes": [
+          {
+            "rate": 2.5,
+            "amount": 14.85
+          }
+        ],
+        "payment_conditions": [
+          {
+            "discount": 0,
+            "days": 30
+          }
+        ]
+      },
+      "text": "//S1/10/4031202511/11/180107/20/61257233.4/30/105493567/32/8:49.82/33/2.5:14.85/40/0:30"
+    },
+    {
+      "id": "ANNEX-D-EX4",
+      "spec": "IG QR-bill v2.4, Annex D",
+      "swico_input": {
+        "invoice_number": "X.66711/8824",
+        "invoice_date": "2020-07-12",
+        "customer_reference": "MW-2020-04",
+        "vat_number": "107978798",
+        "vat_rate_details": [
+          {
+            "rate": 2.5,
+            "amount": 117.22
+          }
+        ],
+        "payment_conditions": [
+          {
+            "discount": 3,
+            "days": 5
+          },
+          {
+            "discount": 1.5,
+            "days": 20
+          },
+          {
+            "discount": 1,
+            "days": 40
+          },
+          {
+            "discount": 0,
+            "days": 60
+          }
+        ]
+      },
+      "text": "//S1/10/X.66711\\/8824/11/200712/20/MW-2020-04/30/107978798/32/2.5:117.22/40/3:5;1.5:20;1:40;0:60"
+    },
+    {
+      "id": "ANNEX-A-2-S1",
+      "spec": "IG QR-bill v2.4, Annex A, Table 18",
+      "swico_input": {
+        "invoice_number": "1234",
+        "invoice_date": "2020-10-21",
+        "vat_number": "102673386",
+        "vat_rate": 7.7,
+        "payment_conditions": [
+          {
+            "discount": 0,
+            "days": 30
+          }
+        ]
+      },
+      "text": "//S1/10/1234/11/201021/30/102673386/32/7.7/40/0:30"
+    }
+  ]
+}

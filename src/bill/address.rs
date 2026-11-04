@@ -75,9 +75,11 @@ impl Address {
         city: &str,
         country: &str,
     ) -> Result<Self, AddressError> {
+        // Spec 4.2.2: all limits are in characters, not UTF-8 bytes.
+
         // Name
         let name = name.trim().to_string();
-        if !(1..=70).contains(&name.len()) {
+        if !(1..=70).contains(&name.chars().count()) {
             return Err(AddressError::AddressNameError(
                 "Name must be 1–70 chars".into(),
             ));
@@ -89,7 +91,7 @@ impl Address {
             .filter(|s| !s.is_empty())
             .map(|s| s.to_string());
         if let Some(ref s) = street
-            && s.len() > 70 {
+            && s.chars().count() > 70 {
                 return Err(AddressError::AddressStreetError(
                     "Street must not be longer than 70 chars".into(),
                 ));
@@ -101,19 +103,19 @@ impl Address {
             .filter(|s| !s.is_empty())
             .map(|s| s.to_string());
         if let Some(ref h) = house_num
-            && h.len() > 16 {
+            && h.chars().count() > 16 {
                 return Err(AddressError::AddressHouseError);
             }
 
         // Postal code
         let plz = plz.trim().to_string();
-        if plz.is_empty() || plz.len() > 16 {
+        if plz.is_empty() || plz.chars().count() > 16 {
             return Err(AddressError::AddressPostalCodeError);
         }
 
         // City
         let city = city.trim().to_string();
-        if city.is_empty() || city.len() > 35 {
+        if city.is_empty() || city.chars().count() > 35 {
             return Err(AddressError::AddressCityError);
         }
 
@@ -205,6 +207,13 @@ mod tests {
     fn rejects_name_outside_permitted_charset() {
         let err = Address::new("Hello 🤣", None, None, "3000", "Bern", "CH").unwrap_err();
         assert!(matches!(err, AddressError::AddressCharsetError(_)));
+    }
+
+    #[test]
+    fn limits_count_characters_not_bytes() {
+        assert!(Address::new(&"ä".repeat(70), Some(&"é".repeat(70)), Some(&"ü".repeat(16)), "3000", &"ö".repeat(35), "CH").is_ok());
+        assert!(Address::new(&"ä".repeat(71), None, None, "3000", "Bern", "CH").is_err());
+        assert!(Address::new("Muster AG", None, None, "3000", &"ö".repeat(36), "CH").is_err());
     }
 
     #[test]

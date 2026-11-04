@@ -89,7 +89,8 @@ impl SwissQrApp {
             Language::De,
             Language::Fr,
             Language::It,
-            Language::En
+            Language::En,
+            Language::Rm
         ];
 
         center(

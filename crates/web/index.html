@@ -323,7 +323,7 @@
             <div class="flex flex-col gap-2 mb-6">
                 <label class="text-[10px] font-black text-slate-400 uppercase" x-text="labels.Language"></label>
                 <div class="flex bg-slate-100 p-1 rounded-xl">
-                    <template x-for="l in ['De', 'Fr', 'It', 'En']" :key="l">
+                    <template x-for="l in ['De', 'Fr', 'It', 'En', 'Rm']" :key="l">
                         <button
                             @click="lang = l"
                             :data-testid="`lang-${l}`"

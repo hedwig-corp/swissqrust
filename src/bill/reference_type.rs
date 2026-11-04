@@ -47,6 +47,11 @@ impl ReferenceType {
     //! Returns an error if the value is not a valid reference.
     pub fn infer(value: &str) -> Result<Self, ReferenceError> {
 
+        // References are often written in groups ("21 00000 ..."), but the
+        // QR code carries them without spaces (spec 4.2.2, Ref).
+        let value: String = value.chars().filter(|c| !c.is_whitespace()).collect();
+        let value = value.as_str();
+
         // If value is empty, then Reference Type is none
         if value.is_empty() {
             return Ok(Self::NoRef);
@@ -121,6 +126,18 @@ mod tests {
         let value = "RF18539007547034";
         let ref_type = ReferenceType::infer(value).unwrap();
         assert_eq!(ref_type, ReferenceType::Creditor(value.to_owned()));
+    }
+
+    #[test]
+    fn grouped_references_are_stored_without_spaces() {
+        assert_eq!(
+            ReferenceType::infer("21 00000 00003 13947 14300 09017").unwrap(),
+            ReferenceType::QrRef("210000000003139471430009017".into())
+        );
+        assert_eq!(
+            ReferenceType::infer("RF18 5390 0754 7034").unwrap(),
+            ReferenceType::Creditor("RF18539007547034".into())
+        );
     }
 
     #[test]
