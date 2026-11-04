@@ -248,7 +248,7 @@ reject("IBAN-WITH-QRR", "4.3.2", "A QR reference requires a QR-IBAN", bill(BASE_
 reject("QRR-EUR", "2.10 / 2.12.1 / 4.3.2", "QR-IBAN and QR reference are for CHF only since v2.4",
        bill(QR_IBAN, CDTR, currency="EUR", amount="10.00", reference="210000000003139471430009017"),
        # Deferred until IG v2.3 expires in November 2027:
-       # https://github.com/hedwig-corp/swissqrust/issues/2
+       # https://github.com/thomi137/swissqrust/issues/2
        known_gap="G7")
 
 assert qrr_with_check("21000000000313947143000901") == "210000000003139471430009017"

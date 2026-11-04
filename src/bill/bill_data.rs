@@ -183,7 +183,7 @@ pub struct BillData {
         // Spec v2.4 2.10 / 2.12.1 restricts QR-IBAN and QR reference to
         // CHF, but v2.3 still allows EUR and stays valid until November
         // 2027, so EUR + QRR is accepted until then.
-        // TODO: reject it once v2.3 expires - https://github.com/hedwig-corp/swissqrust/issues/2
+        // TODO: reject it once v2.3 expires - https://github.com/thomi137/swissqrust/issues/2
 
         // Spec 4.1.1: character set restriction applies to all free-text fields.
         if let Some(ref msg) = unstructured_message {
@@ -378,7 +378,7 @@ mod tests {
     }
 
     /// Still allowed by IG v2.3 until November 2027, see
-    /// https://github.com/hedwig-corp/swissqrust/issues/2.
+    /// https://github.com/thomi137/swissqrust/issues/2.
     #[test]
     fn qr_reference_in_eur_is_accepted_until_v2_3_expires() {
         assert!(BillData::new(
