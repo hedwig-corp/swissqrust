@@ -11,13 +11,26 @@ use regex::Regex;
 use thiserror::Error;
 use crate::Address;
 use crate::address::AddressError;
+use crate::bill::qr_bill::{QRBillError, QrBill, MAX_QR_DATA_BYTES};
 use crate::bill::reference_type::ReferenceType;
 use crate::input::InputBill;
 use crate::support::utils::is_qr_iban;
 use crate::support::validators::*;
 
+/// Spec 4.2.2 (Amt): two decimal places, "." as separator, no leading
+/// zeroes (a single "0" before the separator is fine, as in "0.10").
 pub static AMOUNT_REGEX: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"^\d{1,9}\.\d{2}$").unwrap());
+    Lazy::new(|| Regex::new(r"^(0|[1-9]\d{0,8})\.\d{2}$").unwrap());
+
+/// Spec 4.4, Table 10: the unstructured message of a "DO NOT USE FOR
+/// PAYMENT" notification, which is the only bill allowed an amount of 0.00.
+pub const NOTIFICATION_MESSAGES: [&str; 5] = [
+    "NICHT ZUR ZAHLUNG VERWENDEN",
+    "NE PAS UTILISER POUR LE PAIEMENT",
+    "NON UTILIZZARE PER IL PAGAMENTO",
+    "DO NOT USE FOR PAYMENT",
+    "BETG DUVRAR PER IL PAJAMENT",
+];
 
 #[derive(Debug, Error)]
 pub enum BillError{
@@ -37,6 +50,8 @@ pub enum BillError{
     QrIbanRequiresQrReference,
     #[error("QR reference (QRR) requires a QR-IBAN")]
     QrReferenceRequiresQrIban,
+    #[error("QR-IBAN with QR reference (QRR) can only be used for CHF")]
+    QrReferenceRequiresChf,
     #[error("Unstructured message and billing information together must not exceed 140 characters")]
     AdditionalInformationTooLong,
     #[error("Alternative procedure parameters must not exceed 100 characters")]
@@ -45,6 +60,10 @@ pub enum BillError{
     AmbiguousBillingInformation,
     #[error("Invalid date '{0}' in Swico billing information (expected YYYY-MM-DD)")]
     InvalidSwicoDate(String),
+    #[error("QR code data is {bytes} bytes, the maximum is {max}")]
+    QrDataTooLong { bytes: usize, max: usize },
+    #[error(transparent)]
+    QrBillError(#[from] QRBillError),
 }
 
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
@@ -118,12 +137,33 @@ pub struct BillData {
             if !AMOUNT_REGEX.is_match(amt) {
                 return Err(BillError::InvalidAmount);
             }
-            // Spec: amount must be between 0.01 and 999999999.99 - an
-            // all-zero value such as "0.00" is not a payable amount.
-            if amt.chars().all(|c| c == '0' || c == '.') {
+            // Spec 4.2.2: amount must be between 0.01 and 999999999.99,
+            // except on a "DO NOT USE FOR PAYMENT" notification (spec 4.4),
+            // which must carry exactly 0.00.
+            let is_notification = unstructured_message
+                .as_deref()
+                .is_some_and(|msg| NOTIFICATION_MESSAGES.contains(&msg));
+            if amt == "0.00" && !is_notification {
                 return Err(BillError::InvalidAmount);
             }
         }
+
+        // Spec 4.2.2 (Ref): the reference goes into the QR code without
+        // spaces. Validated here too, since a `ReferenceType` can be built
+        // directly rather than through `ReferenceType::infer`.
+        let reference_type = match reference_type {
+            ReferenceType::NoRef => ReferenceType::NoRef,
+            ReferenceType::QrRef(reference) => {
+                let reference: String = reference.chars().filter(|c| !c.is_whitespace()).collect();
+                is_valid_qr_reference(&reference)?;
+                ReferenceType::QrRef(reference)
+            }
+            ReferenceType::Creditor(reference) => {
+                let reference: String = reference.chars().filter(|c| !c.is_whitespace()).collect();
+                is_valid_iso11649_reference(&reference)?;
+                ReferenceType::Creditor(reference)
+            }
+        };
 
         is_valid_iban(&iban)?;
 
@@ -141,6 +181,11 @@ pub struct BillData {
             (true, false) => return Err(BillError::QrIbanRequiresQrReference),
             (false, true) => return Err(BillError::QrReferenceRequiresQrIban),
             _ => {}
+        }
+        // Spec v2.4 2.10 / 2.12.1: QR-IBAN and QR reference are for CHF
+        // only (euroSIC is discontinued), so EUR is IBAN + SCOR or NON.
+        if has_qr_reference && currency != Currency::CHF {
+            return Err(BillError::QrReferenceRequiresChf);
         }
 
         // Spec 4.1.1: character set restriction applies to all free-text fields.
@@ -182,6 +227,13 @@ pub struct BillData {
             bill_information,
             alternative_schemes,
         };
+
+        // Spec 6.2: the field limits count characters, so multi-byte text
+        // can still push the payload past what QR version 25 holds.
+        let bytes = QrBill::new(&bill)?.create_qr_text()?.len();
+        if bytes > MAX_QR_DATA_BYTES {
+            return Err(BillError::QrDataTooLong { bytes, max: MAX_QR_DATA_BYTES });
+        }
         Ok(bill)
     }
 }
@@ -329,6 +381,24 @@ mod tests {
     }
 
     #[test]
+    fn qr_reference_in_eur_is_rejected() {
+        let err = BillData::new(
+            QR_IBAN.to_string(),
+            address(),
+            None,
+            Currency::EUR,
+            None,
+            ReferenceType::QrRef(QRR.to_string()),
+            None,
+            None,
+            [None, None],
+        )
+        .unwrap_err();
+
+        assert!(matches!(err, BillError::QrReferenceRequiresChf));
+    }
+
+    #[test]
     fn plain_iban_with_scor_or_no_reference_is_accepted() {
         assert!(BillData::new(
             PLAIN_IBAN.to_string(),
@@ -360,6 +430,94 @@ mod tests {
         .unwrap_err();
 
         assert!(matches!(err, BillError::InvalidAmount));
+    }
+
+    #[test]
+    fn zero_amount_is_accepted_on_a_notification() {
+        for message in NOTIFICATION_MESSAGES {
+            assert!(BillData::new(
+                PLAIN_IBAN.to_string(),
+                address(),
+                None,
+                Currency::CHF,
+                Some("0.00".to_string()),
+                ReferenceType::NoRef,
+                Some(message.to_string()),
+                None,
+                [None, None],
+            )
+            .is_ok(), "{message}");
+        }
+    }
+
+    #[test]
+    fn amount_with_leading_zeroes_is_rejected() {
+        for amount in ["0050.00", "01.00", "00.50"] {
+            let err = BillData::new(
+                PLAIN_IBAN.to_string(),
+                address(),
+                None,
+                Currency::CHF,
+                Some(amount.to_string()),
+                ReferenceType::NoRef,
+                None,
+                None,
+                [None, None],
+            )
+            .unwrap_err();
+
+            assert!(matches!(err, BillError::InvalidAmount), "{amount}");
+        }
+    }
+
+    #[test]
+    fn reference_built_directly_is_validated_and_stored_without_spaces() {
+        let bill = BillData::new(
+            PLAIN_IBAN.to_string(),
+            address(),
+            None,
+            Currency::CHF,
+            None,
+            ReferenceType::Creditor("RF18 5390 0754 7034".to_string()),
+            None,
+            None,
+            [None, None],
+        )
+        .unwrap();
+        assert_eq!(bill.reference_type, ReferenceType::Creditor("RF18539007547034".to_string()));
+
+        let err = BillData::new(
+            QR_IBAN.to_string(),
+            address(),
+            None,
+            Currency::CHF,
+            None,
+            ReferenceType::QrRef("000008207791225857421286695".to_string()),
+            None,
+            None,
+            [None, None],
+        )
+        .unwrap_err();
+        assert!(matches!(err, BillError::ReferenceError(ReferenceError::InvalidQrChecksum)));
+    }
+
+    #[test]
+    fn qr_data_over_997_bytes_is_rejected() {
+        // 140 + 2 x 100 characters, each 3 bytes in UTF-8.
+        let err = BillData::new(
+            QR_IBAN.to_string(),
+            address(),
+            None,
+            Currency::CHF,
+            None,
+            ReferenceType::QrRef(QRR.to_string()),
+            Some("€".repeat(140)),
+            None,
+            [Some("€".repeat(100)), Some("€".repeat(100))],
+        )
+        .unwrap_err();
+
+        assert!(matches!(err, BillError::QrDataTooLong { max: 997, .. }));
     }
 
     #[test]

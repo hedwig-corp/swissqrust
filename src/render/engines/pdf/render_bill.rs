@@ -71,11 +71,14 @@ pub fn render_bill_to_pdf(bill: &BillData, language: Language) -> Result<Vec<u8>
     ReceiptLayout::new()
         .render(bill, language, &builder.fonts, &mut builder.ops);
 
+    // A slip without its QR code is not a QR-bill, so fail instead of
+    // silently drawing the rest of it.
+    let qr = qr_code(bill).map_err(|_| RenderError::QrCodeGenerationError)?;
     execute_bill_ops(
         &mut builder.content,
         &builder.fonts,
         std::mem::take(&mut builder.ops),
-        qr_code(&bill).ok().as_ref(),
+        Some(&qr),
     );
 
     /// Draw a visual overlay grid 5x5 mm and positions and sizes of blocks.

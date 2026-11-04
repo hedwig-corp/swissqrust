@@ -110,10 +110,11 @@ pub fn is_valid_iban(iban: &str) -> Result<(), IbanError>  {
         return Err(IbanError::IncorrectCountryCode);
     }
 
-    if iban.len() < 15 || iban.len() > 34 {
+    // Spec 4.2.2 (IBAN): CH and LI IBANs are always 21 characters.
+    if iban.chars().count() != 21 {
         return Err(IbanError::IncorrectLength{
             expected: 21,
-            actual: iban.len(),
+            actual: iban.chars().count(),
         })}
 
     // Byte-slicing (`iban[4..]`) would panic if a multi-byte character
@@ -245,6 +246,19 @@ mod tests {
     fn test_valid_qr(){
         let qr = "21 00000 00003 13947 14300 0901 7";
         assert!(is_valid_qr_reference(qr).is_ok());
+    }
+
+    #[test]
+    fn iban_must_be_21_characters() {
+        // Valid mod-97 check digits, wrong length.
+        assert_eq!(
+            is_valid_iban("CH78007911230008890123").unwrap_err(),
+            IbanError::IncorrectLength { expected: 21, actual: 22 }
+        );
+        assert_eq!(
+            is_valid_iban("CH630079112300088901").unwrap_err(),
+            IbanError::IncorrectLength { expected: 21, actual: 20 }
+        );
     }
 
     #[test]

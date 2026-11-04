@@ -28,6 +28,7 @@ fn parse_lang(lang: &str) -> Language {
         "Fr" => Language::Fr,
         "It" => Language::It,
         "En" => Language::En,
+        "Rm" => Language::Rm,
         _ => Language::De,
     }
 }
@@ -259,7 +260,10 @@ pub fn labels_json(lang: &str) -> String {
         let text = label(*k, lang).unwrap_or("");
         map.insert(format!("{k:?}"), serde_json::Value::String(text.to_string()));
     }
-    for (key, _, value) in GUI_LABELS.iter().filter(|(_, l, _)| *l == lang) {
+    // The form itself has no Romansh translation; only the slip labels
+    // above do. Fall back to German for the form.
+    let gui_lang = if lang == Language::Rm { Language::De } else { lang };
+    for (key, _, value) in GUI_LABELS.iter().filter(|(_, l, _)| *l == gui_lang) {
         map.insert(key.to_string(), serde_json::Value::String(value.to_string()));
     }
 
@@ -288,7 +292,8 @@ pub fn country_list_json(lang: &str) -> String {
         .map(|c| {
             let meta = c.meta();
             let name = match lang {
-                Language::De => meta.name_de,
+                // No Romansh country names in the source data.
+                Language::De | Language::Rm => meta.name_de,
                 Language::Fr => meta.name_fr,
                 Language::It => meta.name_it,
                 Language::En => meta.name,
